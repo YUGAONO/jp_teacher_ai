@@ -1,7 +1,25 @@
 from fastapi import FastAPI, APIRouter
 from pydantic import BaseModel
+import os
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if origins_env.strip():
+    allow_origins = [o.strip() for o in origins_env.split(",") if o.strip()]
+else:
+    allow_origins = ["http://localhost:8501", "http://127.0.0.1:8501"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 router = APIRouter()
 
 class EchoRequest(BaseModel):
