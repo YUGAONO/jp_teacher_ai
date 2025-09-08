@@ -1,0 +1,1 @@
+curl -X POST -H "Authorization: Bearer app-AbchQDmdecNFNLSKeDKljGE4" -H "Content-Type: application/json" -d {"inputs": {"word": "勉強","jlpt_level": "5"},"query": "","response_mode": "blocking","user": "example_generator"} https://api.dify.ai/v1

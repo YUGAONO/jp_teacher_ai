@@ -26,18 +26,20 @@ st.write("単語とJLPTレベルを入力すると、例文を生成します。
 word_input = st.text_input("単語を入力してください", "勉強")
 level_input = st.selectbox(
     "JLPTレベルを選択してください",
-    ["N1", "N2", "N3", "N4", "N5"]
+    ["1", "2", "3", "4", "5"]
 )
 
 # 例文生成ボタン
 if st.button("例文を生成"):
     if word_input:
         result = get_jlpt_examples(word_input, level_input)
+        print(22222222222)
+        print(result)
         if "error" in result:
             st.error(f"エラーが発生しました: {result['error']}")
         else:
             st.subheader("生成された例文:")
-            for i, example in enumerate(result["examples"], 1):
+            for i, example in enumerate(result['examples'], 1):
                 st.write(f"{i}. {example}")
     else:
         st.warning("単語を入力してください")
