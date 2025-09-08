@@ -1,7 +1,17 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from pydantic import BaseModel
 import os
+import httpx
+from typing import Dict
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Dify API configuration
+API_KEY = os.getenv('DIFY_API_KEY', '')
+BASE_URL = 'https://api.dify.ai/v1/chat-messages'
 
 app = FastAPI()
 
@@ -32,9 +42,36 @@ class ExampleRequest(BaseModel):
 class ExampleResponse(BaseModel):
     examples: list[str]
 
+
+async def get_dify_response(word: str, level: str) -> list[str]:
+    """Get example sentences from Dify API"""
+    headers = {
+        'Authorization': f'Bearer {API_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    query = f"Generate 3 Japanese example sentences using the word '{word}' at JLPT {level} level."
+    
+    data: Dict[str, any] = {
+        "inputs": {},
+        "query": query,
+        "response_mode": "blocking",
+        "user": "example_generator",
+    }
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(BASE_URL, headers=headers, json=data)
+            response.raise_for_status()
+            # Assuming the response contains newline-separated sentences
+            return response.json()['answer'].strip().split('\n')
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/api/v1/examples")
 async def get_examples(request: ExampleRequest):
-    # モック応答 - 後でDify APIに置き換え
+    # Keep mock examples as fallback
     mock_examples = {
         "N5": [
             f"{request.word}は毎日の習慣です。",
@@ -63,7 +100,17 @@ async def get_examples(request: ExampleRequest):
         ]
     }
     
-    return ExampleResponse(examples=mock_examples.get(request.level, []))
+    try:
+        if API_KEY:
+            # Use Dify API if API key is available
+            examples = await get_dify_response(request.word, request.level)
+            return ExampleResponse(examples=examples)
+        else:
+            # Fallback to mock examples if no API key
+            return ExampleResponse(examples=mock_examples.get(request.level, []))
+    except HTTPException:
+        # Fallback to mock examples on API error
+        return ExampleResponse(examples=mock_examples.get(request.level, []))
 
 @app.get("/ping")
 async def ping():
