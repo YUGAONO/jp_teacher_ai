@@ -124,7 +124,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # バックエンドURLの設定
-BACKEND_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000")
+BACKEND_URL = os.getenv("FASTAPI_URL")
 
 def get_jlpt_examples(word, level):
     try:
