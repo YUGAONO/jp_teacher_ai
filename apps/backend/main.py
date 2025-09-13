@@ -5,16 +5,19 @@ import httpx
 from typing import Dict
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from supabase import create_client
 
 # Load environment variables
 load_dotenv()
 
 # Dify API configuration
 API_KEY = os.getenv('DIFY_API_KEY', '')
-print(API_KEY)
 BASE_URL = 'https://api.dify.ai/v1/workflows/run'
 
 app = FastAPI()
+SB = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+
+DUMMY_USER = "00000000-0000-0000-0000-000000000000"
 
 origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
 if origins_env.strip():
@@ -63,10 +66,10 @@ async def get_dify_response(word: str, level: str) -> list[str]:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(BASE_URL, headers=headers, json=data)
-            print(response.json())
+
             # Assuming the response contains newline-separated sentences
             response.raise_for_status()
-            print(333333333)
+
             result = response.json()['data']['outputs']['結果']
             # Split the result into lines and filter out empty lines
             sentences = [line.strip() for line in result.split('\n') if line.strip()]
@@ -107,20 +110,41 @@ async def get_examples(request: ExampleRequest):
     }
     
     try:
-        if API_KEY:
+        examples = []
+        # if API_KEY:
+        print(1111111111111)    
+        #     # Use Dify API if API key is available
+        #     examples = await get_dify_response(request.word, request.level)
+        # else:
             
-            # Use Dify API if API key is available
-            examples = await get_dify_response(request.word, request.level)
-            print(88888888888)
-            print(examples)
-            return ExampleResponse(examples=examples)
-        else:
-            # Fallback to mock examples if no API key
-            return ExampleResponse(examples=mock_examples.get(request.level, []))
-    except HTTPException:
+        #     # Fallback to mock examples if no API key
+        #     examples = mock_examples.get(request.level, [])
+        
+        examples = mock_examples.get(request.level, [])
+        # Save to Supabase
+        data = {
+            "user_id": DUMMY_USER,
+            "input_word": request.word,
+            "jlpt_level": request.level,
+            "examples": examples
+        }
+        
+        try:
+            SB.table("example_sentences").insert(data).execute()
+        except Exception as e:
+            print(f"Failed to save to Supabase: {str(e)}")
+            # Continue even if saving to database fails
+            pass
+
+        return ExampleResponse(examples=examples)
+    except HTTPException as e:
         # Fallback to mock examples on API error
-       
-        return ExampleResponse(examples=mock_examples.get(request.level, []))
+        examples = mock_examples.get(request.level, [])
+        return ExampleResponse(examples=examples)
+
+@app.get("/")
+async def root():
+    return {"message": "JLPT Example Generator API"}
 
 @app.get("/ping")
 async def ping():

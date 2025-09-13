@@ -124,7 +124,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # バックエンドURLの設定
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+BACKEND_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000")
 
 def get_jlpt_examples(word, level):
     try:
@@ -147,54 +147,49 @@ with st.sidebar:
 st.title("JLPT Example Sentence Generator")
 st.write("単語とJLPTレベルを入力すると、例文を生成します。")
 
-if prompt := st.chat_input():
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
-
-# チャット履歴をセッションで管理
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# 出力エリア（中央部分）
-output_container = st.container()
-
-
-# チャット入力欄（下部固定）
-with st.container():
-    st.divider()
+# 入力フォーム
+with st.form(key="example_form"):
     cols = st.columns([2, 1, 1])
-
+    
     with cols[0]:
-        word_input = st.text_input("単語を入力してください", "")
+        word_input = st.text_input("単語を入力してください", value="勉強")
     
     with cols[1]:
         level_input = st.selectbox(
             "JLPTレベル",
-            ["1", "2", "3", "4", "5"]
+            ["1", "2", "3", "4", "5"],
+            index=4  # デフォルトをN5（レベル5）に設定
         )
     
     with cols[2]:
-        if st.button("送信", use_container_width=True):
-            if word_input.strip() != "":
-                # 履歴にユーザー入力を追加
-                st.session_state.messages.append({
-                    "role": "user",
-                    "content": f"単語: {word_input}, JLPT: {level_input}"
-                })
-                
-                # ユーザー入力を画面に表示
-                with st.chat_message("user"):
-                    st.write(f"単語: {word_input}, JLPT: {level_input}")
-                
-                # 例文生成
-                result = get_jlpt_examples(word_input, level_input)
-                with output_container:
-                    if "error" in result:
-                        st.error(f"エラーが発生しました: {result['error']}")
-                    else:
-                        st.subheader("生成された例文:")
-                        for i, example in enumerate(result.get('examples', []), 1):
-                            st.write(f"{i}. {example}")
+        submit_button = st.form_submit_button("例文を生成", use_container_width=True)
+
+# 例文生成と表示
+if submit_button:
+    if word_input.strip():
+        with st.spinner("例文を生成中..."):
+            result = get_jlpt_examples(word_input, level_input)
+            
+        if "error" in result:
+            st.error(f"エラーが発生しました: {result['error']}")
+        else:
+            st.success(f"「{word_input}」のJLPT N{level_input}レベルの例文を生成しました！")
+            
+            # 例文を表示
+            st.subheader("生成された例文:")
+            examples = result.get('examples', [])
+            
+            if examples:
+                for i, example in enumerate(examples, 1):
+                    st.write(f"**{i}.** {example}")
             else:
-                st.warning("単語を入力してください")
+                st.warning("例文が生成されませんでした。")
+    else:
+        st.warning("単語を入力してください")
+
+# フッター情報
+st.divider()
+st.markdown("**使用方法:**")
+st.markdown("1. 学習したい日本語の単語を入力")
+st.markdown("2. 目標のJLPTレベルを選択")
+st.markdown("3. 「例文を生成」ボタンをクリック")
