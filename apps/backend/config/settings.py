@@ -23,8 +23,12 @@ def get_cors_origins():
             "http://localhost:8501", 
             "http://127.0.0.1:8501",
             "http://streamlit:8501",  # Docker環境用
-            "http://localhost:5173",  # Vue.js 開発サーバー
-            "http://127.0.0.1:5173"   # Vue.js 開発サーバー (代替)
+            "http://localhost:5173",  # Vue.js 開発サーバー（デフォルト）
+            "http://127.0.0.1:5173",  # Vue.js 開発サーバー（代替）
+            "http://localhost:3000",  # Vue.js 開発サーバー（カスタムポート）
+            "http://127.0.0.1:3000",  # Vue.js 開発サーバー（カスタムポート代替）
+            "http://localhost:4173",  # Vue.js プレビューサーバー
+            "http://127.0.0.1:4173"   # Vue.js プレビューサーバー（代替）
         ]
         return default_origins
 

@@ -1,7 +1,20 @@
 <template>
   <div class="sidebar">
     <div class="sidebar-header">
-      <h1 class="text-xl font-bold text-white">JLPT Example Generator</h1>
+      <h1 class="text-xl font-bold text-white">JP Teacher AI</h1>
+    </div>
+    
+    <!-- ナビゲーションメニュー -->
+    <div v-if="isAuthenticated" class="navigation-section">
+      <h3 class="text-lg font-semibold text-white mb-3">メニュー</h3>
+      <nav class="nav-menu">
+        <router-link to="/words" class="nav-link" active-class="nav-link-active">
+          📚 単語PDF生成
+        </router-link>
+        <router-link to="/examples" class="nav-link" active-class="nav-link-active">
+          📝 例文生成
+        </router-link>
+      </nav>
     </div>
     
     <!-- 未ログイン時 -->
@@ -63,7 +76,7 @@
             class="refresh-button"
           >
             <span v-if="isLoading">更新中...</span>
-            <span v-else>最新の情報を取得</span>
+            <span v-else">最新の情報を取得</span>
           </button>
         </div>
         
@@ -79,23 +92,13 @@
           class="logout-button"
         >
           <span v-if="isLoading">ログアウト中...</span>
-          <span v-else>ログアウト</span>
+          <span v-else">ログアウト</span>
         </button>
       </div>
     </div>
     
-    <!-- ヘルプ情報 -->
-    <!-- <div class="help-section">
-      <h3 class="text-md font-semibold text-white mb-2">使用方法</h3>
-      <ul class="help-list">
-        <li>1. 学習したい日本語の単語を入力</li>
-        <li>2. 目標のJLPTレベルを選択</li>
-        <li>3. 「例文を生成」ボタンをクリック</li>
-      </ul>
-    </div> -->
-    
     <div class="footer">
-      <p class="text-sm text-gray-300">© 2024 JLPT Example Generator</p>
+      <p class="text-sm text-gray-300">© 2024 JP Teacher AI</p>
     </div>
   </div>
 </template>
@@ -146,6 +149,37 @@ const handleLogout = async () => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.navigation-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link-active {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  font-weight: 600;
+}
+
 .auth-section,
 .user-section {
   flex: 1;
@@ -183,7 +217,9 @@ const handleLogout = async () => {
 }
 
 .profile-info {
-  space-y: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .user-info-card {
@@ -225,24 +261,6 @@ const handleLogout = async () => {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.help-section {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.help-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.help-list li {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
 }
 
 .footer {

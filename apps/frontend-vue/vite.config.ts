@@ -17,4 +17,15 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+    hmr: {
+      port: 3000
+    }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 3000
+  }
 })

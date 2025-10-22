@@ -1,61 +1,134 @@
-# JLPT例文自動生成Webアプリ
+# JP Teacher AI
 
-このアプリケーションは、日本語の単語とJLPTレベルを入力すると、その単語を使った例文を自動生成するWebサービスです。
-バックエンド（FastAPI）とフロントエンド（Streamlit）で構成されています。
+このアプリケーションは、日本語学習を支援するWebサービスです。学習した単語からPDFの単語帳を生成したり、単語とJLPTレベルを指定して例文を生成することができます。
 
 ## 主な機能
-- 単語とJLPTレベル（N1〜N5）を指定して例文を生成
-- Dify APIを利用した自動生成（APIキーがない場合はモック例文を返します）
+- **単語PDF生成**: 学習した単語リストから美しい学習用PDFを生成
+- **例文生成**: 単語とJLPTレベル（N1〜N5）を指定して例文を自動生成
+- **Dify API連携**: AI による高品質な例文・単語分析
+
+## 技術スタック
+- **フロントエンド**: Vue.js + TypeScript + Vite + Tailwind CSS
+- **バックエンド**: FastAPI + Python
+- **PDF生成**: ReportLab
+- **AI連携**: Dify API
+- **認証**: JWT認証
+- **データベース**: Supabase
 
 ## ディレクトリ構成
 
 ```
 apps/
-  backend/    # FastAPI バックエンド
-	 main.py
-	 requirements.txt
-  frontend/   # Streamlit フロントエンド
-	 main.py
-	 requirements.txt
-render.yaml   # Renderデプロイ用設定
+  backend/        # FastAPI バックエンド
+    main.py
+    requirements.txt
+    models/         # Pydanticモデル
+    routers/        # APIルーター
+    services/       # ビジネスロジック
+    config/         # 設定ファイル
+  frontend-vue/   # Vue.js フロントエンド
+    src/
+      components/   # Vueコンポーネント
+      services/     # API通信
+      stores/       # Pinia状態管理
+      router/       # Vue Router
+docker-compose.yml     # 開発用Docker Compose
+docker-compose.prod.yml # 本番用Docker Compose
 ```
 
-## セットアップ方法
+## 🐳 Docker Composeでの起動（推奨）
 
-1. **リポジトリをクローン**
-	```sh
-	git clone <このリポジトリのURL>
-	cd jp_teacher_ai
-	```
+### 開発環境
+```bash
+# リポジトリをクローン
+git clone <このリポジトリのURL>
+cd jp_teacher_ai
 
-2. **環境変数の設定**  
-	`apps/.env` ファイルに以下を記載します（Dify APIキーは任意）。
-	```
-	BACKEND_URL=http://127.0.0.1:8000
-	DIFY_API_KEY=あなたのDifyAPIキー
-	```
+# 環境変数の設定
+cp .env.example .env
+# .envファイルを編集して必要な設定を行う
 
-3. **バックエンドの起動**
-	```sh
-	cd apps/backend
-	pip install -r requirements.txt
-	uvicorn main:app --reload
-	```
+# Docker Composeで起動
+docker compose up --build
 
-4. **フロントエンドの起動**
-	```sh
-	cd ../frontend
-	pip install -r requirements.txt
-	streamlit run main.py
-	```
+# アクセス
+# フロントエンド: http://localhost:3000
+# バックエンド: http://localhost:8000
+```
 
-5. **Webブラウザでアクセス**  
-	[http://localhost:8501](http://localhost:8501) にアクセスしてください。
+### 本番環境
+```bash
+# 本番用設定で起動
+docker compose -f docker-compose.prod.yml up --build
 
-## デプロイ
+# アクセス
+# フロントエンド: http://localhost
+# バックエンド: http://localhost:8000
+```
 
-`render.yaml` を使って [Render](https://render.com/) で簡単にデプロイできます。
+## 🛠️ ローカル開発セットアップ
 
-## ライセンス
+### 必要な環境変数
+`.env` ファイルを作成し、以下を設定してください：
 
-MIT
+```env
+# Dify API設定
+DIFY_API_KEY=your_dify_api_key
+DIFY_BASE_URL=https://api.dify.ai/v1/workflows/run
+
+# JWT設定
+JWT_SECRET_KEY=your_jwt_secret_key
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Supabase設定
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+
+# CORS設定
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+```
+
+### バックエンドの起動
+```bash
+cd apps/backend
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### フロントエンドの起動
+```bash
+cd apps/frontend-vue
+npm install
+npm run dev
+```
+
+## 📚 使用方法
+
+1. **ユーザー登録・ログイン**
+   - サイドバーから新規登録またはログインを行います
+
+2. **単語PDF生成**
+   - 「📚 単語PDF生成」メニューをクリック
+   - 学習した単語を改行区切りで入力
+   - 「PDF生成」ボタンでPDFを生成・ダウンロード
+
+3. **例文生成**
+   - 「📝 例文生成」メニューをクリック
+   - 単語とJLPTレベルを入力して例文を生成
+
+## 🚀 デプロイ
+
+`render.yaml` を使って [Render](https://render.com/) でデプロイ可能です。
+
+## 🤝 開発に参加
+
+1. Fork this repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 ライセンス
+
+MIT License

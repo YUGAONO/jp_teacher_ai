@@ -3,8 +3,6 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/counter'
 import AppSidebar from '@/components/common/AppSidebar.vue'
-import ExampleForm from '@/components/example/ExampleForm.vue'
-import ExampleList from '@/components/example/ExampleList.vue'
 
 const authStore = useAuthStore()
 const { user, isAuthenticated } = storeToRefs(authStore)
@@ -22,11 +20,8 @@ onMounted(() => {
     <main class="main-content">
       <div class="content-wrapper">
         <header class="page-header">
-    
           <div v-if="isAuthenticated" class="user-greeting">
             こんにちは、{{ user?.display_name || 'ユーザー' }}さん！
-            <br>
-            単語とJLPTレベルを入力すると、例文を生成します。
           </div>
           
           <div v-else class="login-prompt">
@@ -34,23 +29,17 @@ onMounted(() => {
           </div>
         </header>
         
-        <!-- 例文生成機能（ログイン済みの場合のみ表示） -->
-        <div v-if="isAuthenticated" class="example-section">
-          <ExampleForm />
-          <ExampleList />
+        <!-- ルータービューで画面を切り替え -->
+        <div v-if="isAuthenticated" class="router-view-container">
+          <RouterView />
         </div>
         
-        <!-- フッター情報 -->
-        <!-- <footer v-if="isAuthenticated" class="page-footer">
-          <div class="usage-info">
-            <h3 class="usage-title">使用方法:</h3>
-            <ol class="usage-list">
-              <li>学習したい日本語の単語を入力</li>
-              <li>目標のJLPTレベルを選択</li>
-              <li>「例文を生成」ボタンをクリック</li>
-            </ol>
-          </div> -->
-        <!-- </footer> -->
+        <div v-else class="login-required">
+          <div class="login-card">
+            <h3>ログインが必要です</h3>
+            <p>PDF生成機能を使用するには、サイドバーからログインしてください。</p>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -70,20 +59,13 @@ onMounted(() => {
 }
 
 .content-wrapper {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .page-header {
   margin-bottom: 2rem;
   text-align: center;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 1rem;
 }
 
 .user-greeting {
@@ -100,39 +82,34 @@ onMounted(() => {
   border-left: 4px solid #2196f3;
 }
 
-.example-section {
+.router-view-container {
   margin-bottom: 3rem;
 }
 
-.page-footer {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid #e0e0e0;
+.login-required {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
 }
 
-.usage-info {
+.login-card {
   background-color: white;
-  padding: 1.5rem;
+  padding: 2rem;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
 }
 
-.usage-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+.login-card h3 {
   color: #333;
+  margin-bottom: 1rem;
 }
 
-.usage-list {
-  list-style: decimal;
-  margin-left: 1.5rem;
-  line-height: 1.6;
+.login-card p {
   color: #666;
-}
-
-.usage-list li {
-  margin-bottom: 0.5rem;
+  line-height: 1.6;
 }
 
 @media (max-width: 768px) {
@@ -144,8 +121,8 @@ onMounted(() => {
     padding: 1rem;
   }
   
-  .page-title {
-    font-size: 2rem;
+  .content-wrapper {
+    max-width: 100%;
   }
 }
 </style>
