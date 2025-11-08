@@ -68,29 +68,34 @@ class PDFService:
         c.setFont("Japanese-Bold", 18)
         c.drawString(x, y + item_height - 30, word_data['word'])
         
-        # ひらがなとローマ字を並べて表示（キー名なし、値のみ）
+        # ひらがなとローマ字を近くに並べて表示（間隔を狭める）
+        c.setFillColor(self.colors['text'])
+        c.setFont("Japanese", 12)
+        c.drawString(x, y + item_height - 55, word_data['hiragana']+" / "+word_data['rome'])
+        
+        #英訳
         c.setFillColor(self.colors['primary'])
         c.setFont("Japanese", 12)
-        c.drawString(x, y + item_height - 55, word_data['hiragana'])
+        c.drawString(x, y + item_height - 80, word_data['english'])
         
-        c.setFont("Helvetica", 12)
-        c.drawString(x + 200, y + item_height - 55, word_data['rome'])
+        # # 類義語・反意語（もしあれば）
+        # c.setFillColor(self.colors['secondary'])
+        # c.setFont("Japanese", 10)
+        # if word_data.get('synonyms'):
+        #     c.drawString(x, y + item_height - 75, f"類義語: {word_data['synonyms']}")
+        # if word_data.get('antonym'):
+        #     c.drawString(x + 250, y + item_height - 75, f"反意語: {word_data['antonym']}")
         
-        # 類義語・反意語（もしあれば）
-        c.setFillColor(self.colors['secondary'])
-        c.setFont("Japanese", 10)
-        if word_data.get('synonyms'):
-            c.drawString(x, y + item_height - 75, f"類義語: {word_data['synonyms']}")
-        if word_data.get('antonym'):
-            c.drawString(x + 250, y + item_height - 75, f"反意語: {word_data['antonym']}")
-        
-        # 例文（キー名なし、値のみ）
+        # 例文を描画し、位置を正確に計算する
         c.setFillColor(self.colors['text'])
         c.setFont("Japanese", 11)
         
         # 1つ目の例文（日本語）
         example_text = word_data['example']
         max_chars_per_line = 60
+        example_start_y = y + item_height - 105
+        example_lines_count = 1
+        
         if len(example_text) > max_chars_per_line:
             # 日本語の場合、文字数で分割
             lines = []
@@ -104,30 +109,56 @@ class PDFService:
                     current_line = char
             lines.append(current_line)
             
+            example_lines_count = len(lines)
             for i, line in enumerate(lines):
-                c.drawString(x, y + item_height - 95 - (i * 15), line)
+                c.drawString(x, example_start_y - (i * 15), line)
         else:
-            c.drawString(x, y + item_height - 95, example_text)
+            c.drawString(x, example_start_y, example_text)
         
-        # 1つ目の例文のローマ字（もしあれば）
+        # 1つ目の例文のローマ字読み（例文の直後に配置）
         if word_data.get('example_rome'):
             c.setFont("Helvetica", 9)
             c.setFillColor(self.colors['secondary'])
-            c.drawString(x, y + item_height - 110, word_data['example_rome'])
+            rome_y = example_start_y - (example_lines_count * 15)  # 例文の行数を考慮
+            c.drawString(x, rome_y, word_data['example_rome'])
         
         # 2つ目の例文（もしあれば）
         if word_data.get('example2'):
             c.setFont("Japanese", 11)
             c.setFillColor(self.colors['text'])
             example2_text = word_data['example2']
-            y_offset = 15 if len(example_text) <= max_chars_per_line else 30
-            c.drawString(x, y + item_height - 95 - y_offset, example2_text)
             
-            # 2つ目の例文のローマ字（もしあれば）
+            # 2つ目の例文の開始位置を計算（1つ目の例文とローマ字読みの後）
+            example2_start_y = example_start_y - (example_lines_count * 15)
+            if word_data.get('example_rome'):
+                example2_start_y -= 15  # ローマ字読みの分だけさらに下げる
+            
+            example2_lines_count = 1
+            if len(example2_text) > max_chars_per_line:
+                # 2つ目の例文も分割が必要な場合
+                lines = []
+                current_line = ""
+                
+                for char in example2_text:
+                    if len(current_line + char) <= max_chars_per_line:
+                        current_line += char
+                    else:
+                        lines.append(current_line)
+                        current_line = char
+                lines.append(current_line)
+                
+                example2_lines_count = len(lines)
+                for i, line in enumerate(lines):
+                    c.drawString(x, example2_start_y - (i * 15), line)
+            else:
+                c.drawString(x, example2_start_y, example2_text)
+            
+            # 2つ目の例文のローマ字読み（2つ目の例文の直後に配置）
             if word_data.get('example_rome2'):
                 c.setFont("Helvetica", 9)
                 c.setFillColor(self.colors['secondary'])
-                c.drawString(x, y + item_height - 110 - y_offset, word_data['example_rome2'])
+                rome2_y = example2_start_y - (example2_lines_count * 15)
+                c.drawString(x, rome2_y, word_data['example_rome2'])
 
     def create_pdf_from_words(self, words: List[Dict[str, Any]]) -> Dict[str, Any]:
         """単語リストからPDFを作成してbase64で返す"""
@@ -138,10 +169,10 @@ class PDFService:
             width, height = A4
             
             # 1ページあたりのアイテム数とレイアウト
-            items_per_page = 5  # ローマ字例文が追加されたので1ページのアイテム数をさらに減らす
+            items_per_page = 4  # より多くのスペースが必要なので減らす
             
             item_width = width - 100
-            item_height = 120  # 高さをさらに増やしてローマ字例文を収める
+            item_height = 140  # 高さをさらに増やしてローマ字例文を収める
             margin_x = 50
             margin_y = 80
             
